@@ -1,6 +1,6 @@
 import NextAuth from 'next-auth'
 
-declare module NextAuth {
+declare module 'next-auth' {
   export interface User {
     id: string
     name: string
