@@ -9,7 +9,6 @@ export function buildNextAuthOptions(
 ): NextAuthOptions {
   return {
     adapter: PrismaAdapter(req, res),
-
     providers: [
       GoogleProvider({
         clientId: process.env.GOOGLE_CLIENT_ID ?? '',
