@@ -1,14 +1,23 @@
-import { Button, Heading, MultiStep, Text, TextArea } from '@ignite-ui/react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  Avatar,
+  Button,
+  Heading,
+  MultiStep,
+  Text,
+  TextArea,
+} from '@ignite-ui/react'
+import { GetServerSideProps } from 'next'
+import { getServerSession } from 'next-auth'
+import { useSession } from 'next-auth/react'
 import { ArrowRight } from 'phosphor-react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Container, Header } from '../styles'
-import { ProfileBox, FormAnnotation } from './styles'
-import { useSession } from 'next-auth/react'
-import { GetServerSideProps } from 'next'
-import { getServerSession } from 'next-auth'
+import { FormAnnotation, ProfileBox } from './styles'
 import { buildNextAuthOptions } from '../../api/auth/[...nextauth].api'
+import { api } from '@/src/lib/axios'
+import { useRouter } from 'next/router'
 
 const updateProfileSchema = z.object({
   bio: z.string(),
@@ -26,15 +35,20 @@ export default function UpdateProfile() {
   })
 
   const session = useSession()
+  const router = useRouter()
 
-  console.log(session)
+  async function handleUpdateProfile(data: UpdateProfileData) {
+    await api.put('/users/profile', {
+      bio: data.bio,
+    })
 
-  async function handleUpdateProfile(data: UpdateProfileData) {}
+    await router.push(`/schedule/${session.data?.user.username}`)
+  }
 
   return (
     <Container>
       <Header>
-        <Heading as="strong">Bem vindo ao Ignite Call!</Heading>
+        <Heading as="strong">Bem-vindo ao Ignite Call!</Heading>
         <Text>
           Precisamos de algumas informações para criar seu perfil! Ah, você pode
           editar essas informações depois.
@@ -45,7 +59,12 @@ export default function UpdateProfile() {
 
       <ProfileBox as="form" onSubmit={handleSubmit(handleUpdateProfile)}>
         <label>
-          <Text size="sm">Foto de perfil</Text>
+          <Text>Foto de perfil</Text>
+          <Avatar
+            src={session.data?.user.avatar_url}
+            referrerPolicy="no-referrer"
+            alt={session.data?.user.name}
+          />
         </label>
 
         <label>
@@ -57,7 +76,8 @@ export default function UpdateProfile() {
         </label>
 
         <Button type="submit" disabled={isSubmitting}>
-          Finalizar <ArrowRight />
+          Finalizar
+          <ArrowRight />
         </Button>
       </ProfileBox>
     </Container>
@@ -65,7 +85,11 @@ export default function UpdateProfile() {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  const session = getServerSession(req, res, buildNextAuthOptions(req, res))
+  const session = await getServerSession(
+    req,
+    res,
+    buildNextAuthOptions(req, res),
+  )
 
   return {
     props: {
